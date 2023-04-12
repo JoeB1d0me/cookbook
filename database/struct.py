@@ -40,7 +40,13 @@ class Datastructure():
             return 0
         
     def load_recipe(self):
-        pass
+        try:
+            query = ("""SELECT recipes.id, recipes.name, recipes.description, recipes.instructions, recipes.category_id, 
+                     recipe_ingredients.quantity, ingredients.unit, ingredients.name, categories.name
+                     FROM recipes
+                     INNER JOIN """)
+        except:
+            pass
         
         
         
