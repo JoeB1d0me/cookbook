@@ -6,7 +6,7 @@ Master Project- Cookbook/Recipebook"""
 import os,sys
 import mysql.connector
 
-class Datastructure():
+class DataStructure():
     
     def connect(self,host,port,user,password,database):
         """Creates a connection object to the database"""
@@ -41,12 +41,17 @@ class Datastructure():
         
     def load_recipe(self):
         try:
-            query = ("""SELECT recipes.id, recipes.name, recipes.description, recipes.instructions, recipes.category_id, 
-                     recipe_ingredients.quantity, ingredients.unit, ingredients.name, categories.name
+            query = ("""SELECT recipes.id, recipes.name, 
+                     recipes.description, recipes.instructions, recipes.category_id, 
+                     recipe_ingredients.quantity,
+                     ingredients.unit, ingredients.name, categories.name
                      FROM recipes
                      INNER JOIN """)
-        except:
-            pass
+        except mysql.connector.Error:
+            return 2
+    
+        
+        
         
         
         
@@ -55,9 +60,3 @@ class Datastructure():
         self.recipe = []
         self.ingredient_records = []
         
-        
-def main():
-    a = Datastructure()
-    
-if (__name__ == "__main__"):
-  main()
