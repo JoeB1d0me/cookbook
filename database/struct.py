@@ -59,4 +59,13 @@ class DataStructure():
         self.connected = False
         self.recipe = []
         self.ingredient_records = []
+        self.categories = []
+        
+        self.recipe_placeholder = ["", "", "", 0]
+        self.recipe_updater = [0, "", "", "", 0]
+        
+        self.ingredient_placeholder = ["", ""]
+        self.ingredient_updater = [0, "", ""]
+        
+        
         
