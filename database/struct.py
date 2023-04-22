@@ -39,7 +39,7 @@ class DataStructure():
             print("Discconnect success")
             return 0
         
-    def load_recipe(self):
+    def load_recipe(self):  
         try:
             query = ("""SELECT recipes.id, recipes.name, 
                      recipes.description, recipes.instructions, recipes.category_id, 
