@@ -52,6 +52,4 @@ class BookApp():
         self.mainMenu.add_cascade(label="File", menu=self.fileMenu, underline=0)
         
         self.fileMenu.add_command(label="Exit", command=self.exit)
-        self.
-
-    
+        
