@@ -71,7 +71,7 @@ class DataStructure():
         except mysql.connector.Error as error:
             print("Failed to insert record into recipe_ingredients table: {}".format(error))
 
-    def add_category(self, name):
+    def add_category(self, name):  
         try:
             insert_category_query = "INSERT INTO categories (name) VALUES (%s)"
             category_values = (name,)
