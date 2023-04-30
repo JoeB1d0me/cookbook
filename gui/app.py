@@ -42,14 +42,15 @@ class BookApp():
         self.root.title("cookbook")
         self.root.resizable(False, False)
         
-        self.mainFrame = tk.Frame(self.root, height=650, width=1150)
+        self.mainFrame = tk.Frame(self.root, height=800, width=600)
         self.mainFrame.grid(row=0,column=0)
         
-        #creating the menu object
-        self.mainMenu = tk.Menu(self.mainFrame)
-        self.root.config(menu = self.mainMenu)
-        self.fileMenu = tk.Menu(self.mainMenu, tearoff=0)
-        self.mainMenu.add_cascade(label="File", menu=self.fileMenu, underline=0)
-        
-        self.fileMenu.add_command(label="Exit", command=self.exit)
-        
+        # Menu bar
+        self.menubar = tk.Menu(self.root)
+        self.root.config(menu=menubar)
+        self.file_menu = tk.Menu(menubar)
+        self.menubar.add_cascade(label="File", menu=file_menu)
+        self.add_command(label="Exit", command=self.exit_program)
+        help_menu = tk.Menu(menubar)
+        menubar.add_cascade(label="Help", menu=help_menu)
+        help_menu.add_command(label="About", command=self.about)
