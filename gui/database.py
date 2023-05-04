@@ -20,6 +20,9 @@ class DataStructure():
         self.addCategory = [""]
         self.updateCategory = [0,""]
         
+        self.addRecipeIngredient = [0,0,0]
+        
+        
         self.connected = False
         
             
@@ -113,26 +116,22 @@ class DataStructure():
         except mysql.connector.Error as error:
             print("Failed to insert record into ingredients table: {}".format(error))
 
-    def get_ingredient(self, ingredient_id):
+    def get_ingredient(self):
         try:
-            select_ingredient_query = "SELECT * FROM ingredients WHERE id=%s"
-            self.cursor.execute(select_ingredient_query, (ingredient_id,))
-            ingredient = self.cursor.fetchone()
-            if ingredient:
-                return ingredient
-            else:
-                print("No ingredient found with id = {}".format(ingredient_id))
+            select_ingredient_query = "SELECT * FROM ingredients ORDER BY name"
+            self.cursor.execute(select_ingredient_query)
+            self.ingredients = self.cursor.fetchall()
         except mysql.connector.Error as error:
             print("Failed to retrieve record from ingredients table: {}".format(error))
              
-    def update_ingredient(self, ingredient_id, name, unit):
+    def update_ingredient(self):
         try:
-            sql = f"UPDATE ingredients SET name ='{name}', unit='{unit}', WHERE id = {ingredient_id}"
+            sql = f"UPDATE ingredients SET name ='{self.update_ingredient[1]}', unit='{self.update_ingredient[2]}', WHERE id = {self.update_ingredient[0]}"
             self.cursor.execute(sql)
             self.conn.commit()
             return 0
         except:
-            print("Fialed to delete recipe")
+            print("Failed to delete recipe")
             return 1
 
  # delete ingredient
@@ -155,6 +154,19 @@ class DataStructure():
             self.conn.commit()
         except mysql.connector.Error as error:
             print("Failed to insert record into recipe_ingredients table: {}".format(error))
+            
+    #Gets recipe information using joins from the intermediate table        
+    def get_recipe_ingredients(self, recipe_id):
+        try:
+            query =f"""SELECT ingredients.name, recipe_ingredients.quantity
+                    FROM recipe_ingredients
+                    JOIN ingredients ON recipe_ingredients.ingredient_id = ingredients.id
+                    WHERE recipe_ingredients.recipe_id = {recipe_id}"""
+            self.cursor.execute(query)
+            self.ingredients = self.cursor.fetchall()
+
+        except mysql.connector.Error as error:
+            print("Failed to retrieve record from recipe_ingredients table: {}".format(error))
 
 # Category CRUD methods
 
