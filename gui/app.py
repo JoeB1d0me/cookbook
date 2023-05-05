@@ -11,6 +11,7 @@ from tkinter import messagebox
 from tkinter.messagebox import showerror,showinfo,showwarning,YESNOCANCEL,YESNO
 import os,sys
 import PIL
+import traceback
 
 from database import DataStructure
 
@@ -25,54 +26,69 @@ class BookApp():
 
     def clear_fields(self):
         #Clears all entry fields and sets the option menu to the first option
-        self.recipeNameEntry.delete(0, END)
-        self.descriptionEntry.delete(0, END)
-        self.instructionsEntry.delete(0, END)
+        self.recipeNameEntry.delete(0, tk.END)
+        self.descriptionEntry.delete('1.0', 'end')
+        self.instructionsEntry.delete('1.0', 'end')
         self.cat.set(self.category_default)
         
     #Clear fields for the ingredients
     def clear_ingredients(self):
-        self.ingredientsList.delete(0, END)
+        self.ingredientsList.delete(0, tk.END)
         
     def add_ingredient(self):
-         # open a new window to add a new ingredient to the recipe
-        ingredient_window = tk.Toplevel(self.master)
+        if (self.midInsert):
+            # open a new window to add a new ingredient to the recipe
+            self.ingredient_window = tk.Toplevel(self.root)
 
-        # create labels and entry fields for the ingredient data
-        ingredient_name_label = tk.Label(ingredient_window, text="Ingredient Name")
-        ingredient_name_label.grid(row=0, column=0, padx=10, pady=10)
-        ingredient_name_entry = tk.Entry(ingredient_window)
-        ingredient_name_entry.grid(row=0, column=1, padx=10, pady=10)
+            # create labels and entry fields for the ingredient data
+            self.ingredient_name_label = tk.Label(self.ingredient_window, text="Ingredient Name")
+            self.ingredient_name_label.grid(row=0, column=0, padx=10, pady=10)
+            self.ingredient_name_entry = tk.Entry(self.ingredient_window)
+            self.ingredient_name_entry.grid(row=0, column=1, padx=10, pady=10)
+            
+            
+
+            self.ingredient_quantity_label = tk.Label(self.ingredient_window, text="Ingredient Quantity")
+            self.ingredient_quantity_label.grid(row=1, column=0, padx=10, pady=10)
+            self.ingredient_quantity_entry = tk.Entry(self.ingredient_window)
+            self.ingredient_quantity_entry.grid(row=1, column=1, padx=10, pady=10)
+            
+            self.ingredient_unit_label = tk.Label(self.ingredient_window, text="Ingredient Unit")
+            self.ingredient_unit_label.grid(row=2, column=0, padx=10, pady=10)
+            self.ingredient_unit_entry = tk.Entry(self.ingredient_window)
+            self.ingredient_unit_entry.grid(row=2, column=1, padx=10, pady=10)
+
+            # create a button to add the new ingredient to the listbox and close the window
+            add_ingredient_button = tk.Button(self.ingredient_window, text="Add Ingredient", command=self.insert_ingredient)
+            add_ingredient_button.grid(row=3, column=0, columnspan=2, pady=10)
+
+    def insert_ingredient(self):
+        try:
+            if (self.midInsert):
+                self.ingredientName = self.ingredient_name_entry.get()
+                self.ingredientQuantity = self.ingredient_quantity_entry.get()
+                self.ingredientUnit = self.ingredient_unit_entry.get()
+                self.db.addIngredient = [self.ingredientName, float(self.ingredientQuantity), self.ingredientUnit]
+                self.storeIngredient = self.db.addIngredient
+                self.db.add_ingredient()
+                self.listOfIngredients.append((self.ingredientName, self.ingredientQuantity, self.ingredientUnit))
+                self.ingredientsList.insert(tk.END, self.ingredientName + " " + self.ingredientQuantity + " " + self.ingredientUnit)
+                # close the window
+                self.ingredient_window.destroy()
+            
+        except Exception:
+            print(traceback.format_exc())
+            tk.messagebox.showerror("Error", "Invalid input")
         
-        
-
-        ingredient_quantity_label = tk.Label(ingredient_window, text="Ingredient Quantity")
-        ingredient_quantity_label.grid(row=1, column=0, padx=10, pady=10)
-        ingredient_quantity_entry = tk.Entry(ingredient_window)
-        ingredient_quantity_entry.grid(row=1, column=1, padx=10, pady=10)
-        
-        ingredient_unit_label = tk.Label(ingredient_window, text="Ingredient Unit")
-        ingredient_unit_label.grid(row=2, column=0, padx=10, pady=10)
-        ingredient_unit_entry = tk.Entry(ingredient_window)
-        ingredient_unit_entry.grid(row=2, column=1, padx=10, pady=10)
-
-        # create a button to add the new ingredient to the listbox and close the window
-        add_ingredient_button = tk.Button(ingredient_window, text="Add Ingredient", command=lambda: self.insert_ingredient(ingredient_name_entry.get(), ingredient_quantity_entry.get(), ingredient_window))
-        add_ingredient_button.grid(row=2, column=0, columnspan=2, pady=10)
-
-    def insert_ingredient(self, name, quantity, unit, window):
-        self.db.add_ingredient(name, quantity)
-        self.db.add_recipe_ingredient
-        self.ingredients.append((name, quantity))
-        self.ingredients_listbox.insert(END, name + " - " + quantity+unit)
-        window.destroy()
-
     def remove_ingredient(self):
           # remove the selected ingredient from the list of ingredients and from the listbox
-        selected_ingredient = self.ingredients_listbox.curselection()
-        if selected_ingredient:
-            self.ingredients_listbox.delete(selected_ingredient)
-            del self.ingredients[selected_ingredient[0]]
+            selected_ingredient = self.ingredientsLists.curselection()
+            if (selected_ingredient):
+                self.ingredientsList.delete(selected_ingredient)
+                del self.listOfIngredients[selected_ingredient[0]]
+                self.db.delete_ingredient(self.ingredientName)
+            else:
+                tk.messagebox.showerror("Error", "No ingredient selected")
 
     
     def delete_confirmation(self):
@@ -88,14 +104,19 @@ class BookApp():
     
     def connect_handle(self):
         if(not self.db.connected):
-            a = self.db.connect("localhost", "3306", "root", "Hhk,c1bU4am?", "cookbook_test_case")
-            if(a == 0):
-                self.feedback.config(text="Connected to database")
-                self.db.connected = True
-                self.connectButton.config(text="Disconnect")
-                self.recipe_createbtn['state'] = NORMAL
-            else:
+            try:
+                a = self.db.connect("localhost", "3306", "root", "Hhk,c1bU4am?", "cookbook_test_case")
+                if(a == 0):
+                    self.feedback.config(text="Connected to database")
+                    self.db.connected = True
+                    self.connectButton.config(text="Disconnect")
+                    self.recipe_createbtn['state'] = NORMAL
+                else:
+                    self.feedback.config(text="Connection failed")
+            except Exception as e:
+                print(e)
                 self.feedback.config(text="Connection failed")
+                
         else:
             self.db.disconnect()
             self.clear_fields()
@@ -114,38 +135,43 @@ class BookApp():
             if(not self.midInsert):
                 self.clear_fields()
                 self.clear_ingredients()
-                self.midInsert = True      
                 self.recipe_insertFrame.config(height=40)
                 self.recipe_savebtn.grid(row=1)
                 self.recipe_cancelbtn.grid(row=2)
-                self.recipe_createbtn.config(text="Fields cleared")
-                self.recipe_createbtn['state'] = DISABLED               
+                self.recipe_createbtn.config(text="cleared")
+                self.recipe_createbtn['state'] = DISABLED    
+                self.midInsert = True           
             else:
                 print("Error")       
                 
     def save_recipe(self):
         try:
          if(self.midInsert):
-             self.pull_recipe()
-             self.pull_ingredient()
-             a = self.db.add_recipe()
-             self.midInsert = False
-             self.clear_fields()
-             self.clear_ingredients()
-             self.recipe_insertFrame.config(height=10)
-             self.recipe_savebtn.grid_forget()
-             self.recipe_cancelbtn.grid_forget()
-             self.recipe_createbtn['state'] = NORMAL
-             self.recipe_createbtn.config(text="Insert")
-             self.display_recipe(0)
-             self.display_ingredients(0)
-        except:
-            tk.messagebox.showerror("Error", "Currently not mid insertion")
+            self.name = self.recipeNameEntry.get()
+            self.description = self.descriptionEntry.get("1.0", "end")
+            self.instructions = self.instructionsEntry.get("1.0", "end")
+            self.db.addRecipe = [self.name, self.description, self.instructions]
+            self.db.add_recipe()
+            self.storeRecipe = self.db.addRecipe
+            self.recipe_createbtn['state'] = NORMAL
+            self.recipe_createbtn.config(text="New")
+            self.feedback.config(text="Recipe saved")
+            self.midInsert = False
+            self.clear_fields()
+            self.clear_ingredients()
+            self.display_recipe(0)
+            self.display_ingredients(0)
+            self.recipe_insertFrame.config(height=10)
+            self.recipe_savebtn.grid_forget()
+            self.recipe_cancelbtn.grid_forget()
+        except Exception:
+            print(traceback.format_exc())
+            tk.messagebox.showerror("Error", "Invalid input")
              
     def cancel_recipe(self):
         self.recipe_insertFrame.config(height=10)
         self.recipe_savebtn.grid_forget()
-        self.recipe_cancelb.grid_forget()
+        self.recipe_cancelbtn.grid_forget()
         self.recipe_createbtn['state'] = NORMAL
         self.recipe_createbtn.config(text="New")
         self.feedback.config(text="Insert cancelled")   
@@ -156,12 +182,28 @@ class BookApp():
         self.display_ingredients(0) 
     
     def pull_recipe(self):
-        self.name = self.recipeNameEntry.get()
-        self.description = self.descriptionEntry.get()
-        self.instructions = self.instructionsEntry.get()
-        self.category = self.cat.get()
-        
-        self.db.add_recipe = [self.name, self.description, self.instructions, self.category]
+        try:
+            self.name = self.recipeNameEntry.get()
+            self.description = self.descriptionEntry.get("1.0", "end")
+            self.instructions = self.instructionsEntry.get("1.0", "end")
+            self.category = self.cat.get()
+            
+            self.db.add_recipe = [self.name, self.description, self.instructions, self.category]
+        except Exception as e:
+            tk.messagebox.showerror("Error", "Error pulling recipe")
+            print(e) #Debug check
+            
+    # Pulls ingredients from the listbox and adds them to the database
+    def pull_ingredient(self):
+        try:
+            for ingredient in self.listOfIngredients:
+                self.ingredientName, self.ingredientQuantity, self.ingredientUnit = ingredient
+                self.db.addIngredient = [self.ingredientName, float(self.ingredientQuantity), self.ingredientUnit]
+                self.storeIngredient = self.db.addIngredient
+                self.db.add_ingredient()
+        except Exception as e:
+            tk.messagebox.showerror("Error", "Error pulling ingredients")
+            print(e)
         
     # Displays recipe    
     def display_recipe(self, index):
@@ -174,9 +216,19 @@ class BookApp():
             self.descriptionEntry.insert(0, self.description)
             self.instructionsEntry.insert(0, self.instructions)
             self.cat.set(self.category)
-        except IndexError as e:
-            self.feedback.config(text="No recipes available")
+        except Exception as e:
+            self.feedback.config(text="Error: " + str(e))
         
+    # Displays ingredients
+    def display_ingredients(self, index):
+        try:
+            self.tempIngredients = self.db.ingredients[index]
+            self.clear_ingredients()
+            for i in self.tempIngredients:
+                self.listOfIngredients.append(i)
+                self.ingredientsList.insert(END, i[0] + " - " + i[1])
+        except IndexError as e:
+            self.feedback.config(text="No ingredients available")
     # Update recipe
     def update_recipe(self):
         if(self.db.connected):
@@ -202,6 +254,7 @@ class BookApp():
         
     def resetID(self):
         self.currentRecipe = 0
+        self.currentIngredient = 0
         
     #Sorts through recipes
     def navigate_recipe(self, directionindex):
@@ -217,10 +270,18 @@ class BookApp():
         
         self.db = DataStructure()
         
+        
+        
         self.category_default = "Breakfast"
         
         self.currentRecipe = 0
         self.tempRecipe = (0, "", "", "",0)
+        self.currentIngredient = 0
+        
+        self.storeIngredient = ["",0.0,""]
+        self.listOfIngredients = []
+        
+        
         
         self.midInsert = False
         
@@ -288,6 +349,10 @@ class BookApp():
         self.add_ingredient_btn = tk.Button(self.inputFrame, text="Add Ingredient", command=self.add_ingredient)
         self.remove_ingredient_btn = tk.Button(self.inputFrame, text="Remove Ingredient", command=self.remove_ingredient)
         
+        #Grid the buttons
+        self.add_ingredient_btn.grid(row=7, column=0)
+        self.remove_ingredient_btn.grid(row=7, column=1)
+        
         #Gridding above elements
         self.recipeIdNum.grid(row=0, column=1)
         self.recipeIdLabel.grid(row=0, column=0)
@@ -310,9 +375,9 @@ class BookApp():
         self.recipe_insertFrame = tk.Frame(self.middle, height=15, width=105)
         self.recipe_insertFrame.place(x=400,y=120)
         
-        self.recipe_createbtn = tk.Button(self.recipe_insertFrame, text="Insert", command=self.insert_recipe, width=5)
-        self.recipe_savebtn = tk.Button(self.recipe_insertFrame, text="Save insert", command=self.save_recipe, width=5)
-        self.recipe_cancelbtn = tk.Button(self.recipe_insertFrame, text="Cancel", command=self.cancel_recipe, width=5)
+        self.recipe_createbtn = tk.Button(self.recipe_insertFrame, text="Insert", command=self.insert_recipe, width=10)
+        self.recipe_savebtn = tk.Button(self.recipe_insertFrame, text="Save insert", command=self.save_recipe, width=10)
+        self.recipe_cancelbtn = tk.Button(self.recipe_insertFrame, text="Cancel", command=self.cancel_recipe, width=10)
         self.recipe_updatebtn = tk.Button(self.editFrame, text="Update", command=self.update_recipe, width=5)
         self.recipe_deletebtn = tk.Button(self.editFrame, text="Delete", command=self.delete_confirmation, width=5)
         
@@ -327,7 +392,7 @@ class BookApp():
         
         #Data navigation buttons
         self.dataFrame = tk.Frame(self.middle, height=15, width=105)
-        self.dataFrame.place(x=150,y=280)
+        self.dataFrame.place(x=200,y=340)
         self.firstbtn = tk.Button(self.dataFrame, text="First", command=lambda:[self.resetID(), self.display_recipe(0)], width=5)
         self.prevbtn = tk.Button(self.dataFrame, text="Prev", command=lambda:[self.navigate_recipe(-1)], width=5)
         self.nextbtn = tk.Button(self.dataFrame, text="Next", command=lambda:[self.navigate_recipe(1)], width=5)
