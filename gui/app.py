@@ -26,6 +26,7 @@ class BookApp():
 
     def clear_fields(self):
         #Clears all entry fields and sets the option menu to the first option
+        self.recipeIdNum.config(text="0")
         self.recipeNameEntry.delete(0, tk.END)
         self.descriptionEntry.delete('1.0', 'end')
         self.instructionsEntry.delete('1.0', 'end')
@@ -41,26 +42,31 @@ class BookApp():
             self.ingredient_window = tk.Toplevel(self.root)
 
             # create labels and entry fields for the ingredient data
+            self.ingredientIdLabel = tk.Label(self.ingredient_window, text="Ingredient ID")
+            self.ingredientIdLabel.grid(row=0, column=0, padx=10, pady=10)
+            self.ingredientIdNum = tk.Label(self.ingredient_window, text=self.storeIngredient[0])
+            self.ingredientIdNum.grid(row=0, column=1, padx=10, pady=10)
+            
             self.ingredient_name_label = tk.Label(self.ingredient_window, text="Ingredient Name")
-            self.ingredient_name_label.grid(row=0, column=0, padx=10, pady=10)
+            self.ingredient_name_label.grid(row=1, column=0, padx=10, pady=10)
             self.ingredient_name_entry = tk.Entry(self.ingredient_window)
-            self.ingredient_name_entry.grid(row=0, column=1, padx=10, pady=10)
+            self.ingredient_name_entry.grid(row=1, column=1, padx=10, pady=10)
             
             
 
             self.ingredient_quantity_label = tk.Label(self.ingredient_window, text="Ingredient Quantity")
-            self.ingredient_quantity_label.grid(row=1, column=0, padx=10, pady=10)
+            self.ingredient_quantity_label.grid(row=2, column=0, padx=10, pady=10)
             self.ingredient_quantity_entry = tk.Entry(self.ingredient_window)
-            self.ingredient_quantity_entry.grid(row=1, column=1, padx=10, pady=10)
+            self.ingredient_quantity_entry.grid(row=2, column=1, padx=10, pady=10)
             
             self.ingredient_unit_label = tk.Label(self.ingredient_window, text="Ingredient Unit")
-            self.ingredient_unit_label.grid(row=2, column=0, padx=10, pady=10)
+            self.ingredient_unit_label.grid(row=3, column=0, padx=10, pady=10)
             self.ingredient_unit_entry = tk.Entry(self.ingredient_window)
-            self.ingredient_unit_entry.grid(row=2, column=1, padx=10, pady=10)
+            self.ingredient_unit_entry.grid(row=3, column=1, padx=10, pady=10)
 
             # create a button to add the new ingredient to the listbox and close the window
             add_ingredient_button = tk.Button(self.ingredient_window, text="Add Ingredient", command=self.insert_ingredient)
-            add_ingredient_button.grid(row=3, column=0, columnspan=2, pady=10)
+            add_ingredient_button.grid(row=4, column=0, columnspan=2, pady=10)
 
     def insert_ingredient(self):
         try:
@@ -111,6 +117,8 @@ class BookApp():
                     self.db.connected = True
                     self.connectButton.config(text="Disconnect")
                     self.recipe_createbtn['state'] = NORMAL
+                    self.db.get_recipe()
+                    self.db.get_recipe_ingredients
                 else:
                     self.feedback.config(text="Connection failed")
             except Exception as e:
@@ -150,7 +158,8 @@ class BookApp():
             self.name = self.recipeNameEntry.get()
             self.description = self.descriptionEntry.get("1.0", "end")
             self.instructions = self.instructionsEntry.get("1.0", "end")
-            self.db.addRecipe = [self.name, self.description, self.instructions]
+            self.category = self.cat.get()
+            self.db.addRecipe = [self.name, self.description, self.instructions, self.category]
             self.db.add_recipe()
             self.storeRecipe = self.db.addRecipe
             self.recipe_createbtn['state'] = NORMAL
@@ -209,33 +218,36 @@ class BookApp():
     def display_recipe(self, index):
         try:
             self.tempRecipe = self.db.recipes[index]
-            (self.recipeID, self.name, self.description, self.instructions, self.category) = self.tempRecipe
+            (self.recipeID, self.recipeName, self.recipeDescription, self.recipeInstructions, self.recipeCategory ) = self.tempRecipe
+            self.recipeIdNum.config(text=self.recipeID)
             self.clear_fields()
-            self.recipeIdNum.config(text=str(self.recipeID))
-            self.recipeNameEntry.insert(0, self.name)
-            self.descriptionEntry.insert(0, self.description)
-            self.instructionsEntry.insert(0, self.instructions)
-            self.cat.set(self.category)
+            self.recipeNameEntry.insert(0, self.recipeName)
+            self.descriptionEntry.insert("1.0", self.recipeDescription)
+            self.instructionsEntry.insert("1.0", self.recipeInstructions)
+            self.cat.set(self.recipeCategory)
         except Exception as e:
             self.feedback.config(text="Error: " + str(e))
+            print(traceback.format_exc())
         
     # Displays ingredients
-    def display_ingredients(self, index):
+    def display_ingredients(self, recipeID):
         try:
-            self.tempIngredients = self.db.ingredients[index]
+            self.tempIngredients = self.db.ingredients[recipeID]
+            (self.ingredientID, self.ingredientName, self.ingredientQuantity, self.ingredientUnit) = self.tempIngredients
             self.clear_ingredients()
             for i in self.tempIngredients:
                 self.listOfIngredients.append(i)
                 self.ingredientsList.insert(END, i[0] + " - " + i[1])
-        except IndexError as e:
+        except Exception as e:
             self.feedback.config(text="No ingredients available")
+            print(traceback.format_exc())
     # Update recipe
     def update_recipe(self):
         if(self.db.connected):
             self.recipeID = self.recipeIdNum.cget("text")
             self.name = self.recipeNameEntry.get()
-            self.description = self.descriptionEntry.get()
-            self.instructions = self.instructionsEntry.get()
+            self.description = self.descriptionEntry.get( "1.0", "end")
+            self.instructions = self.instructionsEntry.get( "1.0", "end")
             self.category = self.cat.get()
             self.db.update_recipe = [self.recipeID, self.name, self.description, self.instructions, self.category]
             self.db.update_recipe()
@@ -275,11 +287,13 @@ class BookApp():
         self.category_default = "Breakfast"
         
         self.currentRecipe = 0
-        self.tempRecipe = (0, "", "", "",0)
+        self.tempRecipe = (0, "", "", "", "")
         self.currentIngredient = 0
         
         self.storeIngredient = ["",0.0,""]
         self.listOfIngredients = []
+        
+        self.tempIngredients = (0,"",0.0,"")
         
         
         

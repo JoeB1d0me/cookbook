@@ -65,13 +65,14 @@ class DataStructure():
             int: Should return 0 if runs succesfully.
         """
         try:
-            insert_recipe_query = "INSERT INTO recipes (name, description, instructions, category) VALUES (%s, %s, %s, %s)"
-            recipe_values = (self.addRecipe[0], self.addRecipe[1], self.addRecipe[2], self.addRecipe[3])
-            self.cursor.execute(insert_recipe_query, recipe_values)
+            insert_recipe_query = f"INSERT INTO recipes (name, description, instructions, category) VALUES ('{self.addRecipe[0]}','{self.addRecipe[1]}','{self.addRecipe[2]}', '{self.addRecipe[3]}')"
+            self.cursor.execute(insert_recipe_query)
             self.conn.commit()
+            self.get_recipe()
             return 0
         except mysql.connector.Error as error:
             print("Failed to insert record into recipes table: {}".format(error))
+            print(traceback.format_exc())
             return 1
 #READ
     def get_recipe(self):
@@ -81,6 +82,7 @@ class DataStructure():
             self.recipes = self.cursor.fetchall()
         except mysql.connector.Error as error:
             print("Failed to retrieve record from recipes table: {}".format(error))
+            print(traceback.format_exc())
 #UPDATE
     def update_recipe(self):
         try:
@@ -89,6 +91,7 @@ class DataStructure():
             self.conn.commit()
         except:
             print("Failed to update recipe")
+            print(traceback.format_exc())
 #DELETE
     def delete_recipe(self, recipe_id):
         try:
@@ -104,12 +107,14 @@ class DataStructure():
 # Ingredient CRUD methods
     def add_ingredient(self):
         try:
-            insert_ingredient_query = "INSERT INTO ingredients (name, quantity, unit) VALUES (%s, %s,%s)"
-            ingredient_values = (self.addIngredient[0], self.addIngredient[1], self.addIngredient[2])
-            self.cursor.execute(insert_ingredient_query, ingredient_values)
+            insert_ingredient_query = f"INSERT INTO ingredients (name, quantity, unit) VALUES ('{self.addIngredient[0]}',{self.addIngredient[1]},'{self.addIngredient[2]}')"
+            self.cursor.execute(insert_ingredient_query)
             self.conn.commit()
+            self.get_ingredient()
+            
         except mysql.connector.Error as error:
             print("Failed to insert record into ingredients table: {}".format(error))
+            print(traceback.format_exc())
 
     def get_ingredient(self):
         try:
@@ -143,15 +148,15 @@ class DataStructure():
     #Create method for the intermediate table
     def add_recipe_ingredient(self):
         try:
-            insert_recipe_ingredient_query = "INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity) VALUES (%s, %s, %s)"
-            recipe_ingredient_values = (self.addRecipeIngredient[0], self.addRecipeIngredient[1], self.addRecipeIngredient[2])
+            insert_recipe_ingredient_query = "INSERT INTO recipe_ingredients (recipe_id, ingredient_id) VALUES (%s, %s)"
+            recipe_ingredient_values = (self.addRecipeIngredient[0], self.addRecipeIngredient[1])
             self.cursor.execute(insert_recipe_ingredient_query, recipe_ingredient_values)
             self.conn.commit()
         except mysql.connector.Error as error:
             print("Failed to insert record into recipe_ingredients table: {}".format(error))
             
-    #Gets recipe information using joins from the intermediate table        
-    def get_recipe_ingredients(self, recipe_id):
+    #Gets the recipe information and the ingredients for that recipe from the intermediate table        
+    def get_all_recipe_ingredients(self, recipe_id):
         try:
             query =f"""SELECT ingredients.name, ingredients.quantity, ingredients.unit
                     FROM recipe_ingredients
