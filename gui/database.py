@@ -1,6 +1,5 @@
 """10/04/2023
-Kingsley U.
-CS50 AP
+🤫🧏‍♀️
 Master Project- Cookbook/Recipebook"""
 
 import os,sys
