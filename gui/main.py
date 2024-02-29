@@ -1,5 +1,4 @@
-"""Kingsley Ulinfun
-CS50 AP
+"""🤫🧏‍♀️
 Master Project- Cookbook/Recipebook
 main.py"""
 
